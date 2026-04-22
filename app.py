@@ -13,37 +13,60 @@ st.set_page_config(
 )
 
 # =========================
-# ESTILO
+# ESTILO (MOBILE + ANIMAÇÕES)
 # =========================
 st.markdown("""
 <style>
-body {
+
+/* fundo */
+body, .stApp {
     background-color: #2b3441;
     color: white;
+    font-family: 'Arial';
 }
 
-.stApp {
-    background-color: #2b3441;
-    color: white;
-}
-
+/* títulos */
 h1, h2, h3 {
     text-align: center;
     color: #38bdf8;
 }
 
+/* cartões métricas estilo app */
 div[data-testid="metric-container"] {
     background-color: #3a4656;
-    border-radius: 12px;
-    padding: 12px;
+    border-radius: 16px;
+    padding: 16px;
+    transition: all 0.3s ease-in-out;
 }
+
+/* hover suave */
+div[data-testid="metric-container"]:hover {
+    transform: scale(1.02);
+    background-color: #44536a;
+}
+
+/* animação de entrada */
+.stApp {
+    animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* botões */
+button {
+    border-radius: 10px !important;
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: scale(1.03);
+}
+
 </style>
 """, unsafe_allow_html=True)
-
-# =========================
-# TÍTULO
-# =========================
-st.title("💰 Gestão Rubi&Gabi")
 
 # =========================
 # DADOS
@@ -52,7 +75,12 @@ if "data" not in st.session_state:
     st.session_state.data = []
 
 # =========================
-# INPUT (FLUXO CORRIGIDO)
+# TÍTULO
+# =========================
+st.title("💰 Gestão Rubi&Gabi")
+
+# =========================
+# INPUT
 # =========================
 st.subheader("➕ Novo movimento")
 
@@ -62,7 +90,6 @@ tipo = st.selectbox("Tipo", ["Salário", "Subsídio Alimentação", "Despesa"])
 categoria = ""
 descricao = ""
 
-# 🔥 SE FOR DESPESA → categoria aparece logo a seguir ao tipo
 if tipo == "Despesa":
     categoria = st.selectbox(
         "Categoria da Despesa",
@@ -99,7 +126,7 @@ df = pd.DataFrame(st.session_state.data)
 # =========================
 # RESUMO
 # =========================
-st.subheader("📊 Resumo Geral")
+st.subheader("📊 Resumo Financeiro")
 
 if not df.empty:
 
@@ -113,15 +140,25 @@ if not df.empty:
     col2.metric("🧾 Despesas", f"€ {desp:.2f}")
     col3.metric("📈 Saldo", f"€ {saldo:.2f}")
 
+    # =========================
+    # ALERTAS INTELIGENTES
+    # =========================
+    if rend > 0:
+
+        percent = desp / rend
+
+        if percent >= 1:
+            st.error("🚨 Despesas ultrapassaram os rendimentos!")
+        elif percent >= 0.8:
+            st.warning("⚠️ Estás perto de ultrapassar o orçamento (80%)")
+        else:
+            st.success("✅ Gestão financeira saudável")
+
 # =========================
-# FILTRO POR PESSOA
+# FILTRO
 # =========================
 if not df.empty:
-
-    st.subheader("👤 Visualização")
-
     pessoa_sel = st.selectbox("Ver dados de:", ["Todos", "Ruben", "Gabi"])
-
     if pessoa_sel != "Todos":
         df = df[df["Pessoa"] == pessoa_sel]
 
@@ -130,21 +167,15 @@ if not df.empty:
 # =========================
 if not df.empty:
 
-    st.subheader("📊 Evolução Mensal (Jan–Dez)")
+    st.subheader("📊 Evolução Mensal")
 
     mensal = df.groupby("Mês")["Valor"].sum().reset_index()
 
-    fig = px.bar(
-        mensal,
-        x="Mês",
-        y="Valor",
-        text="Valor"
-    )
-
+    fig = px.bar(mensal, x="Mês", y="Valor", text="Valor")
     st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# DESPESAS POR CATEGORIA
+# DESPESAS
 # =========================
 if not df.empty:
 
@@ -163,7 +194,7 @@ if not df.empty:
 # =========================
 # HISTÓRICO
 # =========================
-st.subheader("📅 Histórico Anual")
+st.subheader("📅 Histórico")
 
 if not df.empty:
     st.dataframe(df, use_container_width=True)
