@@ -4,7 +4,7 @@ import plotly.express as px
 from datetime import datetime
 
 # =========================
-# CONFIGURAÇÃO
+# CONFIG
 # =========================
 st.set_page_config(
     page_title="Gestão Rubi&Gabi",
@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # =========================
-# ESTILO (CINZA MODERNO)
+# ESTILO
 # =========================
 st.markdown("""
 <style>
@@ -64,21 +64,29 @@ with col1:
 with col2:
     tipo = st.selectbox("Tipo", ["Salário", "Subsídio Alimentação", "Despesa"])
 
-categoria = st.selectbox(
-    "Categoria",
-    ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"]
-)
-
-# 🧠 DESCRIÇÃO SÓ SE FOR "OUTROS"
-descricao = ""
-
-if categoria == "Outros":
-    descricao = st.text_input("📝 Descrição (obrigatório para 'Outros')")
-
 valor = st.number_input("Valor (€)", min_value=0.0, step=10.0)
 
 data = st.date_input("Data", datetime.today())
 
+# =========================
+# LÓGICA INTELIGENTE
+# =========================
+
+categoria = ""
+descricao = ""
+
+if tipo == "Despesa":
+    categoria = st.selectbox(
+        "Categoria da Despesa",
+        ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"]
+    )
+
+    if categoria == "Outros":
+        descricao = st.text_input("📝 Descrição")
+
+# =========================
+# ADICIONAR
+# =========================
 if st.button("Adicionar"):
     st.session_state.data.append({
         "Pessoa": pessoa,
@@ -113,25 +121,15 @@ if not df.empty:
     col3.metric("📈 Saldo", f"€ {saldo:.2f}")
 
 # =========================
-# GRÁFICO 1
+# GRÁFICOS
 # =========================
 if not df.empty:
+
     st.subheader("📊 Rendimentos vs Despesas")
 
-    fig = px.bar(
-        df,
-        x="Tipo",
-        y="Valor",
-        color="Tipo",
-        barmode="group"
-    )
-
+    fig = px.bar(df, x="Tipo", y="Valor", color="Tipo")
     st.plotly_chart(fig, use_container_width=True)
 
-# =========================
-# GRÁFICO 2
-# =========================
-if not df.empty:
     st.subheader("📊 Despesas por Categoria")
 
     despesas = df[df["Tipo"] == "Despesa"]
@@ -147,7 +145,7 @@ if not df.empty:
 # =========================
 # HISTÓRICO
 # =========================
-st.subheader("📋 Histórico Completo")
+st.subheader("📋 Histórico")
 
 if not df.empty:
     st.dataframe(df, use_container_width=True)
