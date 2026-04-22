@@ -13,58 +13,35 @@ st.set_page_config(
 )
 
 # =========================
-# ESTILO (MOBILE + ANIMAÇÕES)
+# ESTILO
 # =========================
 st.markdown("""
 <style>
-
-/* fundo */
-body, .stApp {
+body {
     background-color: #2b3441;
     color: white;
-    font-family: 'Arial';
 }
 
-/* títulos */
+.stApp {
+    background-color: #2b3441;
+    color: white;
+}
+
 h1, h2, h3 {
     text-align: center;
     color: #38bdf8;
 }
 
-/* cartões métricas estilo app */
 div[data-testid="metric-container"] {
     background-color: #3a4656;
-    border-radius: 16px;
-    padding: 16px;
-    transition: all 0.3s ease-in-out;
+    border-radius: 12px;
+    padding: 12px;
+    transition: 0.3s;
 }
 
-/* hover suave */
 div[data-testid="metric-container"]:hover {
     transform: scale(1.02);
-    background-color: #44536a;
 }
-
-/* animação de entrada */
-.stApp {
-    animation: fadeIn 0.6s ease-in;
-}
-
-@keyframes fadeIn {
-    from {opacity: 0;}
-    to {opacity: 1;}
-}
-
-/* botões */
-button {
-    border-radius: 10px !important;
-    transition: 0.2s;
-}
-
-button:hover {
-    transform: scale(1.03);
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -84,21 +61,34 @@ st.title("💰 Gestão Rubi&Gabi")
 # =========================
 st.subheader("➕ Novo movimento")
 
-pessoa = st.selectbox("Pessoa", ["Ruben", "Gabi"])
-tipo = st.selectbox("Tipo", ["Salário", "Subsídio Alimentação", "Despesa"])
+# 👤 PESSOA (HORIZONTAL)
+pessoa = st.radio("Pessoa", ["Ruben", "Gabi"], horizontal=True)
+
+# 💰 TIPO (HORIZONTAL)
+tipo = st.radio("Tipo", ["Salário", "Subsídio Alimentação", "Despesa"], horizontal=True)
 
 categoria = ""
 descricao = ""
 
+# =========================
+# DESPESA
+# =========================
 if tipo == "Despesa":
-    categoria = st.selectbox(
+
+    # 📊 CATEGORIA (HORIZONTAL)
+    categoria = st.radio(
         "Categoria da Despesa",
-        ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"]
+        ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"],
+        horizontal=True
     )
 
+    # 📝 DESCRIÇÃO (SÓ SE OUTROS)
     if categoria == "Outros":
         descricao = st.text_input("📝 Descrição")
 
+# =========================
+# VALOR + DATA
+# =========================
 valor = st.number_input("Valor (€)", min_value=0.0, step=10.0)
 data = st.date_input("Data", datetime.today())
 
@@ -126,7 +116,7 @@ df = pd.DataFrame(st.session_state.data)
 # =========================
 # RESUMO
 # =========================
-st.subheader("📊 Resumo Financeiro")
+st.subheader("📊 Resumo")
 
 if not df.empty:
 
@@ -140,25 +130,13 @@ if not df.empty:
     col2.metric("🧾 Despesas", f"€ {desp:.2f}")
     col3.metric("📈 Saldo", f"€ {saldo:.2f}")
 
-    # =========================
-    # ALERTAS INTELIGENTES
-    # =========================
-    if rend > 0:
-
-        percent = desp / rend
-
-        if percent >= 1:
-            st.error("🚨 Despesas ultrapassaram os rendimentos!")
-        elif percent >= 0.8:
-            st.warning("⚠️ Estás perto de ultrapassar o orçamento (80%)")
-        else:
-            st.success("✅ Gestão financeira saudável")
-
 # =========================
-# FILTRO
+# FILTRO PESSOA
 # =========================
 if not df.empty:
+
     pessoa_sel = st.selectbox("Ver dados de:", ["Todos", "Ruben", "Gabi"])
+
     if pessoa_sel != "Todos":
         df = df[df["Pessoa"] == pessoa_sel]
 
