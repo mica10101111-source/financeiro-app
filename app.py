@@ -69,18 +69,21 @@ valor = st.number_input("Valor (€)", min_value=0.0, step=10.0)
 data = st.date_input("Data", datetime.today())
 
 # =========================
-# LÓGICA INTELIGENTE
+# LÓGICA DINÂMICA
 # =========================
 
 categoria = ""
 descricao = ""
 
 if tipo == "Despesa":
+
+    # 🔥 aparece logo categoria quando é despesa
     categoria = st.selectbox(
         "Categoria da Despesa",
         ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"]
     )
 
+    # 🧠 se for outros aparece descrição
     if categoria == "Outros":
         descricao = st.text_input("📝 Descrição")
 
