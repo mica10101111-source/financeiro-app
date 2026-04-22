@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+import os
 
 # =========================
 # CONFIG
 # =========================
 st.set_page_config(
-    page_title="Gestão Rubi&Gabi",
+    page_title="Gestão Rubi&Gabi PRO",
     page_icon="💰",
     layout="wide"
 )
@@ -32,63 +33,66 @@ h1, h2, h3 {
     color: #38bdf8;
 }
 
+/* cards */
 div[data-testid="metric-container"] {
     background-color: #3a4656;
-    border-radius: 12px;
-    padding: 12px;
+    border-radius: 14px;
+    padding: 14px;
     transition: 0.3s;
 }
 
 div[data-testid="metric-container"]:hover {
     transform: scale(1.02);
+    background-color: #44536a;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# DADOS
+# FICHEIRO DE DADOS (MEMÓRIA)
 # =========================
-if "data" not in st.session_state:
-    st.session_state.data = []
+FILE = "dados_financeiros.csv"
+
+def load_data():
+    if os.path.exists(FILE):
+        return pd.read_csv(FILE)
+    else:
+        return pd.DataFrame(columns=[
+            "Pessoa","Tipo","Categoria","Descrição",
+            "Valor","Data","Ano","Mês"
+        ])
+
+def save_data(df):
+    df.to_csv(FILE, index=False)
+
+df = load_data()
 
 # =========================
 # TÍTULO
 # =========================
-st.title("💰 Gestão Rubi&Gabi")
+st.title("💰 Gestão Rubi&Gabi PRO")
 
 # =========================
 # INPUT
 # =========================
 st.subheader("➕ Novo movimento")
 
-# 👤 PESSOA (HORIZONTAL)
 pessoa = st.radio("Pessoa", ["Ruben", "Gabi"], horizontal=True)
-
-# 💰 TIPO (HORIZONTAL)
 tipo = st.radio("Tipo", ["Salário", "Subsídio Alimentação", "Despesa"], horizontal=True)
 
 categoria = ""
 descricao = ""
 
-# =========================
-# DESPESA
-# =========================
 if tipo == "Despesa":
-
-    # 📊 CATEGORIA (HORIZONTAL)
     categoria = st.radio(
-        "Categoria da Despesa",
+        "Categoria",
         ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"],
         horizontal=True
     )
 
-    # 📝 DESCRIÇÃO (SÓ SE OUTROS)
     if categoria == "Outros":
         descricao = st.text_input("📝 Descrição")
 
-# =========================
-# VALOR + DATA
-# =========================
 valor = st.number_input("Valor (€)", min_value=0.0, step=10.0)
 data = st.date_input("Data", datetime.today())
 
@@ -96,7 +100,8 @@ data = st.date_input("Data", datetime.today())
 # ADICIONAR
 # =========================
 if st.button("Adicionar"):
-    st.session_state.data.append({
+
+    novo = {
         "Pessoa": pessoa,
         "Tipo": tipo,
         "Categoria": categoria,
@@ -105,18 +110,25 @@ if st.button("Adicionar"):
         "Data": data,
         "Ano": data.year,
         "Mês": data.month
-    })
-    st.success("Adicionado 👍")
+    }
+
+    df = pd.concat([df, pd.DataFrame([novo])], ignore_index=True)
+    save_data(df)
+
+    st.success("Guardado com sucesso 👍")
 
 # =========================
-# DATAFRAME
+# FILTRO PESSOA
 # =========================
-df = pd.DataFrame(st.session_state.data)
+if not df.empty:
+    pessoa_sel = st.selectbox("Ver dados de:", ["Todos", "Ruben", "Gabi"])
+    if pessoa_sel != "Todos":
+        df = df[df["Pessoa"] == pessoa_sel]
 
 # =========================
 # RESUMO
 # =========================
-st.subheader("📊 Resumo")
+st.subheader("📊 Resumo Financeiro")
 
 if not df.empty:
 
@@ -131,17 +143,7 @@ if not df.empty:
     col3.metric("📈 Saldo", f"€ {saldo:.2f}")
 
 # =========================
-# FILTRO PESSOA
-# =========================
-if not df.empty:
-
-    pessoa_sel = st.selectbox("Ver dados de:", ["Todos", "Ruben", "Gabi"])
-
-    if pessoa_sel != "Todos":
-        df = df[df["Pessoa"] == pessoa_sel]
-
-# =========================
-# GRÁFICO MENSAL
+# GRÁFICO MENSAL (ORDENADO)
 # =========================
 if not df.empty:
 
@@ -149,7 +151,13 @@ if not df.empty:
 
     mensal = df.groupby("Mês")["Valor"].sum().reset_index()
 
-    fig = px.bar(mensal, x="Mês", y="Valor", text="Valor")
+    fig = px.bar(
+        mensal,
+        x="Mês",
+        y="Valor",
+        text="Valor"
+    )
+
     st.plotly_chart(fig, use_container_width=True)
 
 # =========================
@@ -172,7 +180,7 @@ if not df.empty:
 # =========================
 # HISTÓRICO
 # =========================
-st.subheader("📅 Histórico")
+st.subheader("📅 Histórico Completo")
 
 if not df.empty:
     st.dataframe(df, use_container_width=True)
