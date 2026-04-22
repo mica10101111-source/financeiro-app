@@ -18,12 +18,12 @@ st.set_page_config(
 st.markdown("""
 <style>
 body {
-    background-color: #1e293b;
+    background-color: #9c9ea1;
     color: white;
 }
 
 .stApp {
-    background-color: #1e293b;
+    background-color: #9c9ea1;
     color: white;
 }
 
