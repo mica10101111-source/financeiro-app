@@ -35,10 +35,15 @@ h1, h2, h3 {
 div[data-testid="metric-container"] {
     background-color: #3a4656;
     border-radius: 12px;
-    padding: 15px;
+    padding: 12px;
 }
 </style>
 """, unsafe_allow_html=True)
+
+# =========================
+# TÍTULO
+# =========================
+st.title("💰 Gestão Rubi&Gabi")
 
 # =========================
 # DADOS
@@ -47,45 +52,28 @@ if "data" not in st.session_state:
     st.session_state.data = []
 
 # =========================
-# TÍTULO
+# INPUT (FLUXO CORRIGIDO)
 # =========================
-st.title("💰 Gestão Rubi&Gabi")
+st.subheader("➕ Novo movimento")
 
-# =========================
-# INPUT
-# =========================
-st.subheader("➕ Adicionar movimento")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    pessoa = st.selectbox("Pessoa", ["Ruben", "Gabi"])
-
-with col2:
-    tipo = st.selectbox("Tipo", ["Salário", "Subsídio Alimentação", "Despesa"])
-
-valor = st.number_input("Valor (€)", min_value=0.0, step=10.0)
-
-data = st.date_input("Data", datetime.today())
-
-# =========================
-# LÓGICA DINÂMICA
-# =========================
+pessoa = st.selectbox("Pessoa", ["Ruben", "Gabi"])
+tipo = st.selectbox("Tipo", ["Salário", "Subsídio Alimentação", "Despesa"])
 
 categoria = ""
 descricao = ""
 
+# 🔥 SE FOR DESPESA → categoria aparece logo a seguir ao tipo
 if tipo == "Despesa":
-
-    # 🔥 aparece logo categoria quando é despesa
     categoria = st.selectbox(
         "Categoria da Despesa",
         ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"]
     )
 
-    # 🧠 se for outros aparece descrição
     if categoria == "Outros":
         descricao = st.text_input("📝 Descrição")
+
+valor = st.number_input("Valor (€)", min_value=0.0, step=10.0)
+data = st.date_input("Data", datetime.today())
 
 # =========================
 # ADICIONAR
@@ -97,7 +85,9 @@ if st.button("Adicionar"):
         "Categoria": categoria,
         "Descrição": descricao,
         "Valor": valor,
-        "Data": data
+        "Data": data,
+        "Ano": data.year,
+        "Mês": data.month
     })
     st.success("Adicionado 👍")
 
@@ -109,7 +99,7 @@ df = pd.DataFrame(st.session_state.data)
 # =========================
 # RESUMO
 # =========================
-st.subheader("📊 Resumo Mensal")
+st.subheader("📊 Resumo Geral")
 
 if not df.empty:
 
@@ -124,14 +114,39 @@ if not df.empty:
     col3.metric("📈 Saldo", f"€ {saldo:.2f}")
 
 # =========================
-# GRÁFICOS
+# FILTRO POR PESSOA
 # =========================
 if not df.empty:
 
-    st.subheader("📊 Rendimentos vs Despesas")
+    st.subheader("👤 Visualização")
 
-    fig = px.bar(df, x="Tipo", y="Valor", color="Tipo")
+    pessoa_sel = st.selectbox("Ver dados de:", ["Todos", "Ruben", "Gabi"])
+
+    if pessoa_sel != "Todos":
+        df = df[df["Pessoa"] == pessoa_sel]
+
+# =========================
+# GRÁFICO MENSAL
+# =========================
+if not df.empty:
+
+    st.subheader("📊 Evolução Mensal (Jan–Dez)")
+
+    mensal = df.groupby("Mês")["Valor"].sum().reset_index()
+
+    fig = px.bar(
+        mensal,
+        x="Mês",
+        y="Valor",
+        text="Valor"
+    )
+
     st.plotly_chart(fig, use_container_width=True)
+
+# =========================
+# DESPESAS POR CATEGORIA
+# =========================
+if not df.empty:
 
     st.subheader("📊 Despesas por Categoria")
 
@@ -148,27 +163,9 @@ if not df.empty:
 # =========================
 # HISTÓRICO
 # =========================
-st.subheader("📋 Histórico")
+st.subheader("📅 Histórico Anual")
 
 if not df.empty:
     st.dataframe(df, use_container_width=True)
 else:
-    st.markdown("""
-    <div style="
-        background-color: #ab91ed;
-        color: white;
-        padding: 12px;
-        border-radius: 10px;
-        text-align: center;
-        font-weight: bold;
-    ">
-    Sem dados ainda
-    </div>
-    """, unsafe_allow_html=True)
-
-# =========================
-# RESET
-# =========================
-if st.button("🗑 Limpar tudo"):
-    st.session_state.data = []
-    st.rerun()
+    st.info("Sem dados ainda.")
