@@ -4,7 +4,7 @@ import plotly.express as px
 from datetime import datetime
 
 # =========================
-# CONFIG
+# CONFIGURAÇÃO
 # =========================
 st.set_page_config(
     page_title="Financeiro Família",
@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # =========================
-# ESTILO
+# ESTILO (MOBILE CLEAN)
 # =========================
 st.markdown("""
 <style>
@@ -21,14 +21,17 @@ body {
     background-color: #0f172a;
     color: white;
 }
+
 .stApp {
     background-color: #0f172a;
     color: white;
 }
+
 h1, h2, h3 {
     text-align: center;
     color: #38bdf8;
 }
+
 div[data-testid="metric-container"] {
     background-color: #1e293b;
     border-radius: 12px;
@@ -38,16 +41,16 @@ div[data-testid="metric-container"] {
 """, unsafe_allow_html=True)
 
 # =========================
-# INIT DATA
+# DADOS
 # =========================
 if "data" not in st.session_state:
     st.session_state.data = []
 
 # =========================
-# TITLE
+# TÍTULO
 # =========================
 st.title("💰 Gestão Financeira Familiar")
-st.write("Ruben & Gabi - controlo automático mensal 📊")
+st.write("Ruben & Gabi - controlo inteligente mensal 📊")
 
 # =========================
 # INPUT
@@ -64,8 +67,10 @@ with col2:
 
 categoria = st.selectbox(
     "Categoria",
-    ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Outros"]
+    ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"]
 )
+
+descricao = st.text_input("📝 Descrição (ex: supermercado, gasolina, jantar fora)")
 
 valor = st.number_input("Valor (€)", min_value=0.0, step=10.0)
 
@@ -76,6 +81,7 @@ if st.button("Adicionar"):
         "Pessoa": pessoa,
         "Tipo": tipo,
         "Categoria": categoria,
+        "Descrição": descricao,
         "Valor": valor,
         "Data": data
     })
@@ -93,18 +99,18 @@ st.subheader("📊 Resumo Mensal")
 
 if not df.empty:
 
-    total_rend = df[df["Tipo"].isin(["Salário", "Subsídio Alimentação"])]["Valor"].sum()
-    total_desp = df[df["Tipo"] == "Despesa"]["Valor"].sum()
-    saldo = total_rend - total_desp
+    rend = df[df["Tipo"].isin(["Salário", "Subsídio Alimentação"])]["Valor"].sum()
+    desp = df[df["Tipo"] == "Despesa"]["Valor"].sum()
+    saldo = rend - desp
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("💵 Rendimentos", f"€ {total_rend:.2f}")
-    col2.metric("🧾 Despesas", f"€ {total_desp:.2f}")
+    col1.metric("💵 Rendimentos", f"€ {rend:.2f}")
+    col2.metric("🧾 Despesas", f"€ {desp:.2f}")
     col3.metric("📈 Saldo", f"€ {saldo:.2f}")
 
 # =========================
-# GRÁFICO 1 - REND VS DESP
+# GRÁFICO 1
 # =========================
 if not df.empty:
     st.subheader("📊 Rendimentos vs Despesas")
@@ -120,7 +126,7 @@ if not df.empty:
     st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# GRÁFICO 2 - CATEGORIAS
+# GRÁFICO 2
 # =========================
 if not df.empty:
     st.subheader("📊 Despesas por Categoria")
@@ -136,9 +142,9 @@ if not df.empty:
     st.plotly_chart(fig2, use_container_width=True)
 
 # =========================
-# TABELA
+# HISTÓRICO
 # =========================
-st.subheader("📋 Histórico")
+st.subheader("📋 Histórico Completo")
 
 if not df.empty:
     st.dataframe(df, use_container_width=True)
