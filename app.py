@@ -7,23 +7,23 @@ from datetime import datetime
 # CONFIGURAÇÃO
 # =========================
 st.set_page_config(
-    page_title="Financeiro Família",
+    page_title="Gestão Rubi&Gabi",
     page_icon="💰",
     layout="wide"
 )
 
 # =========================
-# ESTILO (MOBILE CLEAN)
+# ESTILO (FUNDO MAIS CLARO + MODERNO)
 # =========================
 st.markdown("""
 <style>
 body {
-    background-color: #0f172a;
+    background-color: #1e293b;
     color: white;
 }
 
 .stApp {
-    background-color: #0f172a;
+    background-color: #1e293b;
     color: white;
 }
 
@@ -33,7 +33,7 @@ h1, h2, h3 {
 }
 
 div[data-testid="metric-container"] {
-    background-color: #1e293b;
+    background-color: #334155;
     border-radius: 12px;
     padding: 15px;
 }
@@ -49,8 +49,7 @@ if "data" not in st.session_state:
 # =========================
 # TÍTULO
 # =========================
-st.title("💰 Gestão Financeira Familiar")
-st.write("Ruben & Gabi - controlo inteligente mensal 📊")
+st.title("💰 Gestão Rubi&Gabi")
 
 # =========================
 # INPUT
@@ -70,7 +69,11 @@ categoria = st.selectbox(
     ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"]
 )
 
-descricao = st.text_input("📝 Descrição (ex: supermercado, gasolina, jantar fora)")
+# 🔥 DESCRIÇÃO SÓ SE FOR "OUTROS"
+descricao = ""
+
+if categoria == "Outros":
+    descricao = st.text_input("📝 Descrição (obrigatório para 'Outros')")
 
 valor = st.number_input("Valor (€)", min_value=0.0, step=10.0)
 
