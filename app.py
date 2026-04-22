@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from datetime import datetime
 
 # =========================
-# CONFIGURAÇÃO
+# CONFIG
 # =========================
 st.set_page_config(
     page_title="Financeiro Família",
@@ -12,7 +13,7 @@ st.set_page_config(
 )
 
 # =========================
-# ESTILO (MOBILE MODERNO)
+# ESTILO
 # =========================
 st.markdown("""
 <style>
@@ -20,49 +21,38 @@ body {
     background-color: #0f172a;
     color: white;
 }
-
 .stApp {
     background-color: #0f172a;
     color: white;
 }
-
 h1, h2, h3 {
-    color: #38bdf8;
     text-align: center;
+    color: #38bdf8;
 }
-
 div[data-testid="metric-container"] {
     background-color: #1e293b;
     border-radius: 12px;
     padding: 15px;
-    text-align: center;
-}
-
-.stButton button {
-    background-color: #38bdf8;
-    color: black;
-    border-radius: 8px;
-    width: 100%;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# TÍTULO
-# =========================
-st.title("💰 Financeiro da Família")
-st.write("Gestão simples de Ruben & Gabi 📱")
-
-# =========================
-# DADOS
+# INIT DATA
 # =========================
 if "data" not in st.session_state:
     st.session_state.data = []
 
 # =========================
+# TITLE
+# =========================
+st.title("💰 Gestão Financeira Familiar")
+st.write("Ruben & Gabi - controlo automático mensal 📊")
+
+# =========================
 # INPUT
 # =========================
-st.subheader("➕ Novo movimento")
+st.subheader("➕ Adicionar movimento")
 
 col1, col2 = st.columns(2)
 
@@ -70,17 +60,24 @@ with col1:
     pessoa = st.selectbox("Pessoa", ["Ruben", "Gabi"])
 
 with col2:
-    tipo = st.selectbox("Tipo", ["Rendimento", "Despesa"])
+    tipo = st.selectbox("Tipo", ["Salário", "Subsídio Alimentação", "Despesa"])
 
-descricao = st.text_input("Descrição")
+categoria = st.selectbox(
+    "Categoria",
+    ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Outros"]
+)
+
 valor = st.number_input("Valor (€)", min_value=0.0, step=10.0)
+
+data = st.date_input("Data", datetime.today())
 
 if st.button("Adicionar"):
     st.session_state.data.append({
         "Pessoa": pessoa,
         "Tipo": tipo,
-        "Descrição": descricao,
-        "Valor": valor
+        "Categoria": categoria,
+        "Valor": valor,
+        "Data": data
     })
     st.success("Adicionado 👍")
 
@@ -92,46 +89,29 @@ df = pd.DataFrame(st.session_state.data)
 # =========================
 # RESUMO
 # =========================
-st.subheader("📊 Resumo")
+st.subheader("📊 Resumo Mensal")
 
 if not df.empty:
 
-    ruben = df[df["Pessoa"] == "Ruben"]
-    gabi = df[df["Pessoa"] == "Gabi"]
-
-    saldo_ruben = ruben[ruben["Tipo"] == "Rendimento"]["Valor"].sum() - \
-                  ruben[ruben["Tipo"] == "Despesa"]["Valor"].sum()
-
-    saldo_gabi = gabi[gabi["Tipo"] == "Rendimento"]["Valor"].sum() - \
-                 gabi[gabi["Tipo"] == "Despesa"]["Valor"].sum()
-
-    total = saldo_ruben + saldo_gabi
+    total_rend = df[df["Tipo"].isin(["Salário", "Subsídio Alimentação"])]["Valor"].sum()
+    total_desp = df[df["Tipo"] == "Despesa"]["Valor"].sum()
+    saldo = total_rend - total_desp
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("Ruben", f"€ {saldo_ruben:.2f}")
-    col2.metric("Gabi", f"€ {saldo_gabi:.2f}")
-    col3.metric("Total", f"€ {total:.2f}")
+    col1.metric("💵 Rendimentos", f"€ {total_rend:.2f}")
+    col2.metric("🧾 Despesas", f"€ {total_desp:.2f}")
+    col3.metric("📈 Saldo", f"€ {saldo:.2f}")
 
 # =========================
-# TABELA
-# =========================
-st.subheader("📋 Movimentos")
-
-if not df.empty:
-    st.dataframe(df, use_container_width=True)
-else:
-    st.info("Sem dados ainda.")
-
-# =========================
-# GRÁFICO
+# GRÁFICO 1 - REND VS DESP
 # =========================
 if not df.empty:
-    st.subheader("📊 Análise")
+    st.subheader("📊 Rendimentos vs Despesas")
 
     fig = px.bar(
         df,
-        x="Pessoa",
+        x="Tipo",
         y="Valor",
         color="Tipo",
         barmode="group"
@@ -140,7 +120,33 @@ if not df.empty:
     st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# LIMPAR
+# GRÁFICO 2 - CATEGORIAS
+# =========================
+if not df.empty:
+    st.subheader("📊 Despesas por Categoria")
+
+    despesas = df[df["Tipo"] == "Despesa"]
+
+    fig2 = px.pie(
+        despesas,
+        values="Valor",
+        names="Categoria"
+    )
+
+    st.plotly_chart(fig2, use_container_width=True)
+
+# =========================
+# TABELA
+# =========================
+st.subheader("📋 Histórico")
+
+if not df.empty:
+    st.dataframe(df, use_container_width=True)
+else:
+    st.info("Sem dados ainda.")
+
+# =========================
+# RESET
 # =========================
 if st.button("🗑 Limpar tudo"):
     st.session_state.data = []
