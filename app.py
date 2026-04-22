@@ -13,17 +13,17 @@ st.set_page_config(
 )
 
 # =========================
-# ESTILO (FUNDO MAIS CLARO + MODERNO)
+# ESTILO (CINZA MODERNO)
 # =========================
 st.markdown("""
 <style>
 body {
-    background-color: #9c9ea1;
+    background-color: #2b3441;
     color: white;
 }
 
 .stApp {
-    background-color: #9c9ea1;
+    background-color: #2b3441;
     color: white;
 }
 
@@ -33,7 +33,7 @@ h1, h2, h3 {
 }
 
 div[data-testid="metric-container"] {
-    background-color: #334155;
+    background-color: #3a4656;
     border-radius: 12px;
     padding: 15px;
 }
@@ -69,7 +69,7 @@ categoria = st.selectbox(
     ["Renda", "Água", "Luz", "Vodafone", "Alimentação", "Gasolina", "Outros"]
 )
 
-# 🔥 DESCRIÇÃO SÓ SE FOR "OUTROS"
+# 🧠 DESCRIÇÃO SÓ SE FOR "OUTROS"
 descricao = ""
 
 if categoria == "Outros":
@@ -152,7 +152,18 @@ st.subheader("📋 Histórico Completo")
 if not df.empty:
     st.dataframe(df, use_container_width=True)
 else:
-    st.info("Sem dados ainda.")
+    st.markdown("""
+    <div style="
+        background-color: #ab91ed;
+        color: white;
+        padding: 12px;
+        border-radius: 10px;
+        text-align: center;
+        font-weight: bold;
+    ">
+    Sem dados ainda
+    </div>
+    """, unsafe_allow_html=True)
 
 # =========================
 # RESET
